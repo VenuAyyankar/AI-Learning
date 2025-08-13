@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>OTP Login</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      text-align: center;
+    }
+    form {
+      max-width: 300px;
+      margin: auto;
+    }
+    input {
+      padding: 8px;
+      width: 100%;
+      margin-bottom: 12px;
+    }
+    button {
+      padding: 10px 20px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Login with OTP</h2>
+
+  <form id="otpForm">
+    <input type="text" id="phone" placeholder="Enter phone number" required><br>
+    <button type="button" onclick="sendOtp()">Send OTP</button><br><br>
+
+    <input type="text" id="otp" placeholder="Enter OTP"><br>
+    <button type="button" onclick="verifyOtp()">Verify OTP</button>
+  </form>
+
+  <p id="message"></p>
+
+  <script>
+    async function sendOtp() {
+      const phone = document.getElementById('phone').value;
+      const message = document.getElementById('message');
+
+      const res = await fetch('/api/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone })
+      });
+
+      const data = await res.json();
+      message.textContent = data.message;
+    }
+
+    async function verifyOtp() {
+      const phone = document.getElementById('phone').value;
+      const otp = document.getElementById('otp').value;
+      const message = document.getElementById('message');
+
+      const res = await fetch('/api/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, otp })
+      });
+
+      const data = await res.json();
+      message.textContent = data.message;
+
+      if (res.ok) {
+        localStorage.setItem('token', data.token);
+        window.location.href = '/dashboard.html';
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Complete Your Profile</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #e0e7ff, #fef9ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      padding: 20px;
+      animation: fadeIn 1.2s ease-in-out;
+    }
+
+    .form-container {
+      background: #ffffff;
+      padding: 35px 30px;
+      border-radius: 24px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+      width: 100%;
+      max-width: 480px;
+      animation: slideUp 0.8s ease;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 28px;
+      color: #1e1e2f;
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 14px;
+      background: #f9f9f9;
+      font-size: 15px;
+      transition: 0.3s ease;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: #7f5af0;
+      background: #fff;
+      box-shadow: 0 0 8px rgba(127, 90, 240, 0.4);
+    }
+
+    label.upload-label {
+      display: block;
+      font-weight: 500;
+      font-size: 15px;
+      margin: 6px 0 10px;
+      color: #444;
+    }
+
+    input[type="file"] {
+      padding: 10px 0;
+      background: transparent;
+      border: none;
+    }
+
+    #photo-preview {
+      display: none;
+      width: 110px;
+      height: 110px;
+      margin: 15px auto 25px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #7a55e8;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+    }
+
+    #photo-preview:hover {
+      transform: scale(1.05);
+    }
+
+    .skill-level {
+      margin-bottom: 20px;
+      font-size: 15px;
+      color: #444;
+    }
+
+    .skill-level label {
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .skill-options {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .skill-options label {
+      font-weight: normal;
+      display: flex;
+      align-items: center;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #7f5af0, #6246ea);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      box-shadow: 0 4px 14px rgba(127, 90, 240, 0.4);
+    }
+
+    button:hover {
+      background: linear-gradient(135deg, #6246ea, #7f5af0);
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(40px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>Complete Your Profile</h2>
+    <form id="details-form" enctype="multipart/form-data" autocomplete="off">
+      <input type="date" name="dob" required>
+      <select name="gender" required>
+        <option value="">Select Gender</option>
+        <option>Male</option>
+        <option>Female</option>
+        <option>Other</option>
+      </select>
+      <input type="text" name="address" placeholder="Address" required autocomplete="new-address">
+      <input type="text" name="city" placeholder="City" required autocomplete="new-city">
+      <input type="text" name="state" placeholder="State" required autocomplete="new-state">
+
+      <label class="upload-label" for="photo-input">Upload Profile Picture</label>
+      <input type="file" name="photo" accept="image/*" required id="photo-input">
+      <img id="photo-preview" alt="Preview">
+
+      <!-- Skill level selection -->
+      <div class="skill-level">
+        <label>Data Science Skill Level</label>
+        <div class="skill-options">
+          <label><input type="radio" name="skillLevel" value="Beginner" required> Beginner</label>
+          <label><input type="radio" name="skillLevel" value="Intermediate" required> Intermediate</label>
+          <label><input type="radio" name="skillLevel" value="Advanced" required> Advanced</label>
+        </div>
+      </div>
+
+      <button type="submit">Submit</button>
+    </form>
+  </div>
+
+  <script>
+    const photoInput = document.getElementById('photo-input');
+    const photoPreview = document.getElementById('photo-preview');
+
+    photoInput.addEventListener('change', () => {
+      const file = photoInput.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          photoPreview.src = e.target.result;
+          photoPreview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    document.getElementById('details-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const token = localStorage.getItem('token');
+
+      const res = await fetch('/submit-details', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        const skill = formData.get('skillLevel');
+        if (skill === 'Beginner') {
+          window.location.href = 'dashboard.html';
+        } else if (skill === 'Intermediate') {
+          window.location.href = 'beginner-test.html';
+        } else if (skill === 'Advanced') {
+          window.location.href = 'intermediate-test.html';
+        }
+      } else {
+        alert(data.message);
+      }
+    });
+  </script>
+</body>
+</html>

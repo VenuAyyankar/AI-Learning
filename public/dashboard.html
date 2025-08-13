@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0f4f8;
+      display: flex;
+      height: 100vh;
+    }
+    .sidebar {
+      width: 250px;
+      background-color: #0f172a;
+      color: white;
+      padding: 20px 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .sidebar h2 { text-align: center; margin-bottom: 30px; }
+    .sidebar a {
+      display: block;
+      color: white;
+      padding: 12px 24px;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .sidebar a:hover,
+    .sidebar a.active { background-color: #1e293b; }
+    .sidebar .bottom {
+      padding: 10px 24px;
+      border-top: 1px solid #334155;
+    }
+    .main { flex: 1; padding: 24px; overflow-y: auto; }
+    .top-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+    .welcome { font-size: 24px; font-weight: 600; }
+    .banner {
+      background: linear-gradient(to right, #7f00ff, #e100ff);
+      color: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .banner button {
+      background-color: white;
+      color: black;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .content { display: flex; flex-wrap: wrap; gap: 24px; }
+    .schedule, .card {
+      background-color: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+    .schedule { flex: 2; }
+    .card { flex: 1; }
+    .card h3 { margin-top: 0; }
+    .profile-img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-top: 10px;
+    }
+    .logout-btn {
+      background: #f43f5e;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .nav-label { display: flex; align-items: center; gap: 10px; }
+    .footer-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: white;
+      font-size: 14px;
+      padding-top: 10px;
+    }
+    .footer-profile img {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+    }
+    /* Test Scores Section */
+    .test-section {
+      margin-top: 30px;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+    .test-section h3 { margin-top: 0; }
+    .test-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    .test-table th, .test-table td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      vertical-align: top;
+    }
+    .test-table th { background: #f3f4f6; }
+    .answer-list {
+      font-size: 14px;
+      color: #555;
+    }
+    .answer-list li {
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div>
+      <h2>📘 Seed Grant</h2>
+      <a class="active"><span class="nav-label">🏠 Home</span></a>
+      <a><span class="nav-label">🧭 My Journey</span></a>
+      <a><span class="nav-label">🎁 Bonus Courses</span></a>
+      <a><span class="nav-label">⏱️ Coding Playground</span></a>
+      <a><span class="nav-label">🔖 Bookmarks</span></a>
+      <a><span class="nav-label">💻 Question Bank</span></a>
+      <a><span class="nav-label">💬 My Discussions</span></a>
+      <a><span class="nav-label">🎯 Placement Prep</span></a>
+      <a><span class="nav-label">💼 Jobs Board</span></a>
+    </div>
+    <div class="bottom">
+      <div class="footer-profile">
+        <img id="sidebar-photo" src="" alt="User">
+        <div id="sidebar-name">User</div>
+      </div>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="top-section">
+      <div class="welcome" id="welcome-name">Welcome</div>
+    </div>
+
+    <div class="banner">
+      <div>
+        <h3>AI GENERATIVE WORKSHOP</h3>
+        <p>Build AI workflows that work for you</p>
+        <p>📅 20th August</p>
+      </div>
+      <button>Register Now</button>
+    </div>
+
+    <h2>Your Schedule</h2>
+    <div class="content">
+      <div class="schedule">
+        <h4>BACKEND DEVELOPER</h4>
+        <p><strong>Introduction to Databases</strong></p>
+        <ul>
+          <li>Joins (0/2)</li>
+          <li>Coding Practice - 3 🔶 2 Hrs</li>
+          <li>Coding Practice - 4</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Events</h3>
+        <p>🔴 Live Now: 1</p>
+        <p>⚡ Upcoming: 1</p>
+      </div>
+
+      <div class="card">
+        <h3>Leaderboard</h3>
+        <p>🏅 Earn A Badge</p>
+        <p>🏛️ Ramaiah University Of Applies Sciences</p>
+        <p>Rank: Nil (Need ⚡100 more)</p>
+      </div>
+
+      <div class="card">
+        <h3>Learning Consistency</h3>
+        <p>🔥 Current Streak: <strong>0</strong></p>
+        <p>⚡ Score: <strong>0</strong></p>
+        <p>Best: ⚡42</p>
+      </div>
+    </div>
+
+    <!-- Completed Test Scores -->
+    <div class="test-section">
+      <h3>📊 Your Test Scores</h3>
+      <table class="test-table" id="test-scores-table">
+        <thead>
+          <tr>
+            <th>Test Name</th>
+            <th>Score</th>
+            <th>Date</th>
+            <th>Answers</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="4">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+  async function fetchUser() {
+    const token = localStorage.getItem('token');
+    const res = await fetch('/api/auth/user-details', { // changed route
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (!res.ok) return alert(data.message || "Failed to load user details");
+
+    document.getElementById('sidebar-photo').src = data.photo;
+    document.getElementById('sidebar-name').textContent = data.name;
+    document.getElementById('welcome-name').textContent = `Welcome, ${data.name}`;
+  }
+
+  async function fetchTestScores() {
+    const token = localStorage.getItem('token');
+    const res = await fetch('/api/test-results', { // changed route
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+    });
+    const data = await res.json();
+    const tbody = document.querySelector('#test-scores-table tbody');
+    tbody.innerHTML = '';
+
+    if (!Array.isArray(data) || data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4">No tests taken yet.</td></tr>';
+      return;
+    }
+
+    data.forEach(test => {
+      let answersHTML = "<ul class='answer-list'>";
+      if (Array.isArray(test.answers)) {
+        test.answers.forEach(ans => {
+          answersHTML += `<li><strong>Q:</strong> ${ans.question} <br> 
+            <strong>Your Answer:</strong> ${ans.selectedOption} <br> 
+            <strong>Correct Answer:</strong> ${ans.correctOption}</li>`;
+        });
+      }
+      answersHTML += "</ul>";
+
+      const row = `<tr>
+        <td>${test.testName}</td>
+        <td>${test.score} / ${test.totalMarks}</td>
+        <td>${new Date(test.date).toLocaleDateString()}</td>
+        <td>${answersHTML}</td>
+      </tr>`;
+      tbody.innerHTML += row;
+    });
+  }
+
+  function logout() {
+    localStorage.removeItem('token');
+    window.location.href = 'signup.html';
+  }
+
+  fetchUser();
+  fetchTestScores();
+</script>
+
+</body>
+</html>

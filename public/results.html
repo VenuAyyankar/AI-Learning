@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Test Results</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body{font-family:Segoe UI,Arial,sans-serif;background:#f4f7fb;margin:0;padding:20px}
+    .card{max-width:900px;margin:24px auto;padding:20px;background:#fff;border-radius:10px;box-shadow:0 8px 30px rgba(12,18,38,0.06)}
+    h2{margin:0 0 12px}
+    .meta{color:#555;margin-bottom:12px}
+    .qrow{padding:10px;border-bottom:1px solid #eee}
+    .correct{color:green;font-weight:600}
+    .wrong{color:#c22;font-weight:600}
+    .controls{display:flex;gap:12px;margin-top:16px}
+    button{background:#6246ea;color:#fff;border:none;padding:10px 14px;border-radius:8px;cursor:pointer}
+    button.ghost{background:#eee;color:#111}
+    .timer{font-weight:700;color:#333}
+    .notice{margin-top:8px;color:#666;font-size:14px}
+  </style>
+</head>
+<body>
+  <div class="card" id="card">
+    <h2 id="title">Test Results</h2>
+    <div class="meta" id="meta"></div>
+
+    <div id="answers"></div>
+
+    <div class="controls">
+      <button id="toDashboard">Take me to Dashboard</button>
+      <button id="retrySave" class="ghost" style="display:none">Save to DB (retry)</button>
+      <div style="margin-left:auto">Auto redirect in <span class="timer" id="countdown">60</span>s</div>
+    </div>
+
+    <div class="notice" id="notice"></div>
+  </div>
+
+<script>
+(function(){
+  const raw = sessionStorage.getItem('lastTestResult');
+  if(!raw){
+    // nothing to show — go to dashboard
+    window.location.href = 'dashboard.html';
+    return;
+  }
+
+  let result;
+  try { result = JSON.parse(raw); } catch(e){ console.error(e); window.location.href = 'dashboard.html'; return; }
+
+  // render header
+  document.getElementById('title').textContent = result.testName || 'Test Results';
+  const date = result.date ? new Date(result.date).toLocaleString() : new Date().toLocaleString();
+  document.getElementById('meta').innerHTML = `Score: <strong>${result.score} / ${result.totalQuestions}</strong> · Completed: ${date} · Saved to DB: <strong>${result.saved ? 'Yes' : 'No'}</strong>`;
+
+  // render Qs
+  const answersEl = document.getElementById('answers');
+  const keys = Object.keys(result.correct || {});
+  if(keys.length === 0){
+    answersEl.innerHTML = '<p>No question data available.</p>';
+  } else {
+    let html = '';
+    let i = 1;
+    for(const key of keys){
+      const userAns = result.answers?.[key] || 'No answer';
+      const corr = result.correct[key];
+      const correctCls = (userAns === corr) ? 'correct' : 'wrong';
+      html += `<div class="qrow"><strong>Q${i}.</strong> &nbsp; Your: <span class="${correctCls}">${userAns}</span> — Correct: <strong>${corr}</strong></div>`;
+      i++;
+    }
+    answersEl.innerHTML = html;
+  }
+
+  const toDashboard = document.getElementById('toDashboard');
+  const retrySave = document.getElementById('retrySave');
+  const notice = document.getElementById('notice');
+
+  // If save previously failed, show retry button
+  if(!result.saved){
+    retrySave.style.display = 'inline-block';
+    notice.textContent = 'Score was not saved to DB. You can retry saving it to appear on Dashboard.';
+  }
+
+  toDashboard.addEventListener('click', () => {
+    // clear lastTestResult since user moved to dashboard
+    try { sessionStorage.removeItem('lastTestResult'); } catch(e){}
+    window.location.href = 'dashboard.html';
+  });
+
+  retrySave.addEventListener('click', async () => {
+    notice.textContent = 'Saving...';
+    retrySave.disabled = true;
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch('/save-score', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ testName: result.testName, score: result.score, totalQuestions: result.totalQuestions })
+      });
+      if(res.ok){
+        result.saved = true;
+        sessionStorage.setItem('lastTestResult', JSON.stringify(result));
+        document.getElementById('meta').innerHTML = `Score: <strong>${result.score} / ${result.totalQuestions}</strong> · Completed: ${date} · Saved to DB: <strong>Yes</strong>`;
+        retrySave.style.display = 'none';
+        notice.textContent = 'Saved to DB successfully. You can view it anytime on Dashboard.';
+      } else {
+        const d = await res.json().catch(()=>({}));
+        notice.textContent = d.message || 'Failed to save score. Try again.';
+        retrySave.disabled = false;
+      }
+    } catch (err) {
+      console.error(err);
+      notice.textContent = 'Network error while saving. Check your connection and try again.';
+      retrySave.disabled = false;
+    }
+  });
+
+  // countdown 60 seconds then auto-redirect
+  let count = 60;
+  const cdEl = document.getElementById('countdown');
+  cdEl.textContent = count;
+  const interval = setInterval(()=> {
+    count--;
+    cdEl.textContent = count;
+    if(count <= 0){
+      clearInterval(interval);
+      try { sessionStorage.removeItem('lastTestResult'); } catch(e){}
+      window.location.href = 'dashboard.html';
+    }
+  }, 1000);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Intermediate Data Science Test</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(135deg, #f4f7fb, #e8ecf5);
+      margin: 0;
+      padding: 20px;
+    }
+    .card {
+      max-width: 900px;
+      margin: 24px auto;
+      padding: 25px 30px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
+    }
+    h2 {
+      margin: 0 0 12px;
+      text-align: center;
+      color: #333;
+    }
+    .note {
+      font-size: 13px;
+      color: #666;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .q {
+      margin-bottom: 22px;
+      padding: 15px 18px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      background: #fafbff;
+      transition: box-shadow 0.2s ease;
+    }
+    .q:hover {
+      box-shadow: 0 4px 12px rgba(98, 70, 234, 0.1);
+    }
+    .q strong {
+      color: #444;
+    }
+    label {
+      display: block;
+      cursor: pointer;
+      padding: 6px 10px;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+    label:hover {
+      background: #f1f4ff;
+    }
+    input[type="radio"] {
+      margin-right: 8px;
+    }
+    .clear-btn {
+      background: #ccc;
+      color: #000;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 12px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .clear-btn:hover {
+      background: #aaa;
+    }
+    button.submit-btn {
+      background: #6246ea;
+      color: #fff;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: block;
+      margin: 20px auto 0;
+      font-size: 16px;
+    }
+    button.submit-btn:hover {
+      background: #5138c4;
+    }
+    .result {
+      margin-top: 18px;
+      padding: 15px;
+      border-radius: 8px;
+      background: #eef6ee;
+      text-align: center;
+      font-size: 18px;
+    }
+    .correct {
+      color: green;
+      font-weight: 600;
+    }
+    .wrong {
+      color: #c22;
+      font-weight: 600;
+    }
+    .dashboard-btn {
+      background: #0d6efd;
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 15px;
+      margin-top: 15px;
+    }
+    .dashboard-btn:hover {
+      background: #0b5ed7;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Intermediate — Data Science Test</h2>
+    <p class="note">This test is for users who selected <strong>Advanced</strong>. If you are not allowed, you'll be redirected.</p>
+
+    <form id="testForm">
+      <!-- QUESTIONS -->
+      <div id="questionsContainer"></div>
+
+      <button type="submit" class="submit-btn">Submit Test</button>
+    </form>
+
+    <div id="resultArea"></div>
+  </div>
+
+<script>
+(async function(){
+  const token = localStorage.getItem('token');
+  if(!token){ window.location.href = 'login.html'; return; }
+
+  try {
+    const ud = await fetch('/user-details', { headers: { Authorization: `Bearer ${token}` } });
+    if(!ud.ok){ window.location.href = 'login.html'; return; }
+    const user = await ud.json();
+    if(user.skillLevel !== 'Advanced'){ window.location.href = 'dashboard.html'; return; }
+  } catch(e){
+    console.error(e);
+    window.location.href = 'login.html';
+    return;
+  }
+
+  const questions = [
+    {q: "Which method is used to reduce dimensionality while preserving variance?",
+     opts: ["PCA", "KMeans", "Decision Tree", "Random Forest"], ans: "PCA"},
+    {q: "In cross-validation, 'k' refers to?", 
+     opts: ["Number of folds", "Number of features", "Learning rate", "Number of epochs"], ans: "Number of folds"},
+    {q: "Which algorithm is typically used for classification on tabular data?",
+     opts: ["Logistic Regression", "KMeans", "PCA", "Apriori"], ans: "Logistic Regression"},
+    {q: "Which metric is preferable for imbalanced classification?",
+     opts: ["F1 Score", "Accuracy", "Mean Squared Error", "R2 Score"], ans: "F1 Score"},
+    {q: "Which technique helps to prevent overfitting?",
+     opts: ["Regularization", "Increase model complexity", "Train forever", "Remove training data"], ans: "Regularization"},
+    {q: "Which plot is most suitable to check feature correlation?",
+     opts: ["Heatmap", "Boxplot", "Histogram", "Scatter matrix"], ans: "Heatmap"},
+    {q: "What is the main goal of normalization in data preprocessing?",
+     opts: ["Scale features", "Remove features", "Increase bias", "Overfit the model"], ans: "Scale features"},
+    {q: "Which algorithm is best suited for detecting anomalies?",
+     opts: ["Isolation Forest", "Linear Regression", "Naive Bayes", "PCA"], ans: "Isolation Forest"},
+    {q: "Which method combines predictions from multiple models?",
+     opts: ["Ensemble Learning", "Feature Scaling", "Hyperparameter Tuning", "Regularization"], ans: "Ensemble Learning"},
+    {q: "What is the main advantage of using SGD over Batch Gradient Descent?",
+     opts: ["Faster updates", "Higher accuracy always", "Uses all data per step", "Avoids local minima always"], ans: "Faster updates"},
+    {q: "What does the ROC curve plot?",
+     opts: ["TPR vs FPR", "Precision vs Recall", "Loss vs Epochs", "Accuracy vs Threshold"], ans: "TPR vs FPR"},
+    {q: "Which type of data does TF-IDF apply to?",
+     opts: ["Text data", "Image data", "Numerical time series", "Categorical data"], ans: "Text data"},
+    {q: "What is the output of a clustering algorithm?",
+     opts: ["Cluster labels", "Regression coefficients", "Confusion matrix", "ROC curve"], ans: "Cluster labels"},
+    {q: "Which technique can handle missing values effectively?",
+     opts: ["Imputation", "Feature Hashing", "Regularization", "Batch Normalization"], ans: "Imputation"},
+    {q: "What does AUC represent?",
+     opts: ["Area under ROC curve", "Average unit count", "Accuracy under confusion", "Area under correlation"], ans: "Area under ROC curve"}
+  ];
+
+  const correct = {};
+  const container = document.getElementById("questionsContainer");
+
+  questions.forEach((item, idx) => {
+    const qNum = idx+1;
+    correct["q"+qNum] = item.ans;
+
+    const qDiv = document.createElement("div");
+    qDiv.className = "q";
+    qDiv.innerHTML = `<div><strong>${qNum}.</strong> ${item.q}</div>` +
+      item.opts.map(opt => 
+        `<label><input type="radio" name="q${qNum}" value="${opt}"> ${opt}</label>`
+      ).join('') +
+      `<button type="button" class="clear-btn" data-q="q${qNum}">Clear Choice</button>`;
+    container.appendChild(qDiv);
+  });
+
+  container.addEventListener("click", e => {
+    if(e.target.classList.contains("clear-btn")){
+      const qName = e.target.dataset.q;
+      document.querySelectorAll(`input[name="${qName}"]`).forEach(r => r.checked = false);
+    }
+  });
+
+  document.getElementById('testForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const answers = {};
+    let score=0, total=questions.length;
+
+    for(let i=1;i<=total;i++){
+      const val = form["q"+i].value;
+      answers["q"+i] = val;
+      if(val === correct["q"+i]) score++;
+    }
+
+    const area = document.getElementById('resultArea');
+    area.innerHTML = `<div class="result"><strong>Your score: ${score} / ${total}</strong></div>`;
+    let html = '<div style="margin-top:10px;text-align:left">';
+    for(let i=1;i<=total;i++){
+      const key='q'+i;
+      const userAns = answers[key] || 'No answer';
+      const cls = userAns===correct[key] ? 'correct' : 'wrong';
+      html += `<p><strong>Q${i}:</strong> Your: <span class="${cls}">${userAns}</span> — Correct: <strong>${correct[key]}</strong></p>`;
+    }
+    html += '</div><button class="dashboard-btn" onclick="window.location.href='+"'dashboard.html'"+'">Take Me to Dashboard</button>';
+    area.innerHTML += html;
+
+    try {
+      await fetch('/save-score', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ testName: 'Intermediate Data Science Test', score, totalQuestions: total })
+      });
+    } catch(err){
+      console.error(err);
+    }
+  });
+})();
+</script>
+</body>
+</html>

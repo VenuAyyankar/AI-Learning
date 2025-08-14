@@ -11,29 +11,44 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, '../public')));
-app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
-
 
 // Serve static files
 app.use(express.static(path.join(__dirname, '../public')));
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
-// ✅ Root URL loads signup.html
+// ===== Frontend page routes =====
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/signup.html'));
 });
 
-// Routes
+app.get('/signup', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/signup.html'));
+});
+
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/login.html'));
+});
+
+app.get('/details', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/details.html'));
+});
+
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/dashboard.html'));
+});
+
+app.get('/beginner-test', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/beginner-test.html'));
+});
+
+app.get('/intermediate-test', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/intermediate-test.html'));
+});
+
+// ===== Backend API routes =====
 app.use('/', authRoutes);
 
-
-
-
-// Routes
-app.use('/', authRoutes);
-
-// Connect to MongoDB and start server (no deprecated options)
+// ===== MongoDB connection =====
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log('MongoDB connected');

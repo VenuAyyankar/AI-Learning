@@ -37,17 +37,17 @@
       font-size: 28px;
     }
 
-    input {
+    input, select {
       width: 100%;
       padding: 14px 12px;
-      margin-bottom: 18px;
+      margin-bottom: 8px;
       border: 1px solid #ccc;
       border-radius: 10px;
       font-size: 16px;
       transition: 0.3s ease;
     }
 
-    input:focus {
+    input:focus, select:focus {
       border-color: #4facfe;
       outline: none;
       box-shadow: 0 0 5px #4facfeaa;
@@ -64,6 +64,7 @@
       font-weight: bold;
       cursor: pointer;
       transition: background 0.4s ease;
+      margin-top: 10px;
     }
 
     button:hover {
@@ -85,6 +86,19 @@
 
     a:hover {
       color: #0056b3;
+    }
+
+    small {
+      color: red;
+      font-size: 13px;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    #password-strength {
+      font-size: 13px;
+      margin-top: 5px;
+      font-weight: bold;
     }
 
     @keyframes slideIn {
@@ -113,19 +127,26 @@
     <h2>Signup</h2>
     <form id="signup-form" autocomplete="off">
       <input type="text" name="name" placeholder="Full Name" required>
-      <input type="email" name="email" placeholder="Email" required autocomplete="new-email">
 
-      <!-- Country code + phone number -->
-      <div style="display: flex; gap: 8px; margin-bottom: 18px;">
-        <input type="text" name="countryCode" placeholder="+91" required style="flex: 0.4;">
+      <input type="email" name="email" id="email" placeholder="Email" required autocomplete="new-email">
+      <small id="email-error"></small>
+
+      <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+        <select name="countryCode" required style="flex: 0.6;">
+          <option value="+91">🇮🇳 +91</option>
+          <option value="+1">🇺🇸 +1</option>
+          <option value="+44">🇬🇧 +44</option>
+          <option value="+61">🇦🇺 +61</option>
+          <option value="+971">🇦🇪 +971</option>
+        </select>
         <input type="text" name="phone" placeholder="Phone Number" required style="flex: 1;">
       </div>
 
-      <!-- Password with eye toggle -->
       <div style="position: relative;">
         <input type="password" name="password" id="password" placeholder="Password" required autocomplete="new-password">
         <span id="togglePassword" style="position: absolute; right: 12px; top: 14px; cursor: pointer;">👁️</span>
       </div>
+      <div id="password-strength"></div>
 
       <button type="submit">Signup</button>
       <p>Already have an account? <a href="login.html">Login</a></p>
@@ -133,8 +154,21 @@
   </div>
 
   <script>
+    const emailInput = document.getElementById('email');
+    const emailError = document.getElementById('email-error');
     const passwordInput = document.getElementById('password');
     const togglePassword = document.getElementById('togglePassword');
+    const passwordStrength = document.getElementById('password-strength');
+
+    // Live email validation
+    emailInput.addEventListener('input', () => {
+      const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!regex.test(emailInput.value) && emailInput.value !== "") {
+        emailError.textContent = "Enter valid email address";
+      } else {
+        emailError.textContent = "";
+      }
+    });
 
     // Toggle password visibility
     togglePassword.addEventListener('click', () => {
@@ -142,32 +176,31 @@
       passwordInput.setAttribute('type', type);
     });
 
-    // Strong password checker
-    function isStrongPassword(password) {
-      const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-      return regex.test(password);
-    }
+    // Password strength checker
+    passwordInput.addEventListener('input', () => {
+      const value = passwordInput.value;
+      let strength = "";
+      let color = "";
 
-    // Email validation
-    function isValidEmail(email) {
-      const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      return regex.test(email);
-    }
+      if (value.length < 6) {
+        strength = "Weak";
+        color = "red";
+      } else if (value.match(/[A-Z]/) && value.match(/[0-9]/) && value.match(/[@$!%*?&]/) && value.length >= 8) {
+        strength = "Strong";
+        color = "green";
+      } else {
+        strength = "Medium";
+        color = "orange";
+      }
+      passwordStrength.textContent = `Password Strength: ${strength}`;
+      passwordStrength.style.color = color;
+    });
 
     document.getElementById('signup-form').addEventListener('submit', async (e) => {
       e.preventDefault();
+      if (emailError.textContent !== "") return;
+
       const form = e.target;
-
-      if (!isValidEmail(form.email.value)) {
-        alert('Please enter a valid email address');
-        return;
-      }
-
-      if (!isStrongPassword(form.password.value)) {
-        alert('Password must be at least 8 characters long, include uppercase, lowercase, number, and special character.');
-        return;
-      }
-
       const res = await fetch('/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -24,7 +24,13 @@ router.post('/signup', async (req, res) => {
     const exists = await User.findOne({ $or: [{ email }, { phone }] });
     if (exists) return res.status(400).json({ message: 'User already exists' });
 
-    const user = new User({ name, email, phone, password });
+    const user = new User({ 
+      name, 
+      email, 
+      phone, 
+      password, 
+      progressStage: 'personal-details' // <-- set stage after signup
+    });
     await user.save();
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
@@ -91,7 +97,7 @@ router.post('/submit-details', authMiddleware, upload.single('photo'), async (re
   }
 });
 
-// ----------------- Submit Exam (new route) -----------------
+// ----------------- Submit Exam -----------------
 router.post('/submit-exam', authMiddleware, async (req, res) => {
   try {
     const { testName, score, totalQuestions } = req.body;
@@ -102,7 +108,10 @@ router.post('/submit-exam', authMiddleware, async (req, res) => {
     const user = await User.findById(req.user.userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    user.scores = user.scores || [];
+    if (!Array.isArray(user.scores)) {
+      user.scores = [];
+    }
+
     user.scores.push({
       testName,
       score: Number(score),
@@ -112,7 +121,6 @@ router.post('/submit-exam', authMiddleware, async (req, res) => {
 
     await user.save();
 
-    // Don't redirect — let frontend handle 1-minute review + "Take me to dashboard"
     res.json({ success: true, message: 'Exam submitted successfully. Review time started.' });
   } catch (err) {
     console.error(err);
@@ -124,14 +132,17 @@ router.post('/submit-exam', authMiddleware, async (req, res) => {
 router.post('/save-score', authMiddleware, async (req, res) => {
   try {
     const { testName, score, totalQuestions } = req.body;
-    if (typeof score === 'undefined' || typeof totalQuestions === 'undefined') {
-      return res.status(400).json({ message: 'Missing score or totalQuestions' });
+    if (!testName || typeof score === 'undefined' || typeof totalQuestions === 'undefined') {
+      return res.status(400).json({ message: 'Missing testName, score, or totalQuestions' });
     }
 
     const user = await User.findById(req.user.userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    user.scores = user.scores || [];
+    if (!Array.isArray(user.scores)) {
+      user.scores = [];
+    }
+
     user.scores.push({
       testName,
       score: Number(score),
@@ -153,7 +164,10 @@ router.get('/test-history', authMiddleware, async (req, res) => {
     const user = await User.findById(req.user.userId).select('scores');
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    res.json(user.scores || []);
+    // Always return sorted by newest first
+    const sortedScores = (user.scores || []).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    res.json(sortedScores);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Failed to fetch test history' });

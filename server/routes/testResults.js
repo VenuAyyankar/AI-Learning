@@ -2,26 +2,35 @@ const express = require('express');
 const router = express.Router();
 const TestResult = require('../models/testresults');
 const authMiddleware = require('../middleware/auth');
+const User = require('../models/user'); // <-- Import User model to update progress
 
-// Save test result
+// Save test result and update progress
 router.post('/', authMiddleware, async (req, res) => {
   try {
     const { score, totalMarks, testName, answers } = req.body;
 
-    if (!score || !totalMarks || !testName) {
+    if (typeof score === 'undefined' || typeof totalMarks === 'undefined' || !testName) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
     const newResult = new TestResult({
       userId: req.user.id,
-      score,
-      totalMarks,
+      score: Number(score),
+      totalMarks: Number(totalMarks),
       testName,
-      answers: answers || [],
+      answers: Array.isArray(answers) ? answers : [],
       date: new Date()
     });
 
     await newResult.save();
+
+    // Update user's progress stage to dashboard after completing a test
+    const user = await User.findById(req.user.id);
+    if (user) {
+      user.progressStage = 'dashboard';
+      await user.save();
+    }
+
     res.status(201).json({ message: 'Test result saved successfully' });
   } catch (err) {
     console.error('Error saving test result:', err);

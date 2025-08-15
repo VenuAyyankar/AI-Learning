@@ -1,4 +1,3 @@
-// server/models/user.js
 const mongoose = require('mongoose');
 
 const scoreSchema = new mongoose.Schema({
@@ -21,6 +20,11 @@ const userSchema = new mongoose.Schema({
   photo: String,
   skillLevel: { type: String, enum: ['Beginner', 'Intermediate', 'Advanced'] },
   detailsFilled: { type: Boolean, default: false },
+  progressStage: { // <-- NEW field
+    type: String,
+    enum: ['personal-details', 'beginner-test', 'intermediate-test', 'dashboard'],
+    default: 'personal-details'
+  },
   scores: [scoreSchema]
 });
 

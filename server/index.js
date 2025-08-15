@@ -2,17 +2,21 @@ const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 const dotenv = require('dotenv');
-const authRoutes = require('./routes/auth');
 
+// Load environment variables
 dotenv.config();
+
+const authRoutes = require('./routes/auth');
+const testResultsRoutes = require('./routes/testResults'); // <-- Added testResults route
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// ===== Middleware =====
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files
+// ===== Serve static files =====
 app.use(express.static(path.join(__dirname, '../public')));
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
@@ -47,11 +51,12 @@ app.get('/intermediate-test', (req, res) => {
 
 // ===== Backend API routes =====
 app.use('/', authRoutes);
+app.use('/test-results', testResultsRoutes); // <-- This lets your testResults.js work
 
 // ===== MongoDB connection =====
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
-    console.log('MongoDB connected');
-    app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+    console.log('✅ MongoDB connected');
+    app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
   })
-  .catch(err => console.error('MongoDB connection error:', err));
+  .catch(err => console.error('❌ MongoDB connection error:', err));

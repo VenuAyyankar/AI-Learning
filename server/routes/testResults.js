@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const TestResult = require('../models/testresults');
+
+// IMPORTANT: Match the exact file name in /models/
+const TestResult = require('../models/TestResults'); 
 const authMiddleware = require('../middleware/auth');
-const User = require('../models/user'); // <-- Import User model to update progress
+const User = require('../models/User'); // Match exact filename too
 
 // Save test result and update progress
 router.post('/', authMiddleware, async (req, res) => {

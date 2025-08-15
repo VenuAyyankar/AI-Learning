@@ -37,6 +37,7 @@
       font-size: 28px;
     }
 
+    /* Keep original input styling and apply it to select as well */
     input, select {
       width: 100%;
       padding: 14px 12px;
@@ -88,6 +89,7 @@
       color: #0056b3;
     }
 
+    /* Small inline error text */
     small {
       color: red;
       font-size: 13px;
@@ -102,51 +104,57 @@
     }
 
     @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateY(-40px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(-40px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     @keyframes fadeIn {
-      from {
-        opacity: 0;
-      }
-      to {
-        opacity: 1;
-      }
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
   </style>
 </head>
 <body>
   <div class="form-container">
     <h2>Signup</h2>
-    <form id="signup-form" autocomplete="off">
+    <form id="signup-form" autocomplete="off" novalidate>
       <input type="text" name="name" placeholder="Full Name" required>
 
-      <input type="email" name="email" id="email" placeholder="Email" required autocomplete="new-email">
+      <!-- Email with live validation (lowercase enforced) -->
+      <input
+        type="email"
+        name="email"
+        id="email"
+        placeholder="Email"
+        required
+        autocomplete="new-email"
+        autocapitalize="none"
+        spellcheck="false"
+      >
       <small id="email-error"></small>
 
+      <!-- Country code dropdown + phone -->
       <div style="display: flex; gap: 8px; margin-bottom: 10px;">
         <select name="countryCode" required style="flex: 0.6;">
-          <option value="+91">🇮🇳 +91</option>
+          <option value="+91" selected>🇮🇳 +91</option>
           <option value="+1">🇺🇸 +1</option>
           <option value="+44">🇬🇧 +44</option>
           <option value="+61">🇦🇺 +61</option>
           <option value="+971">🇦🇪 +971</option>
+          <option value="+81">🇯🇵 +81</option>
+          <option value="+49">🇩🇪 +49</option>
+          <option value="+65">🇸🇬 +65</option>
         </select>
-        <input type="text" name="phone" placeholder="Phone Number" required style="flex: 1;">
+        <input type="tel" name="phone" placeholder="Phone Number" required style="flex: 1;" inputmode="numeric">
       </div>
 
+      <!-- Password with eye toggle and strength meter -->
       <div style="position: relative;">
         <input type="password" name="password" id="password" placeholder="Password" required autocomplete="new-password">
-        <span id="togglePassword" style="position: absolute; right: 12px; top: 14px; cursor: pointer;">👁️</span>
+        <span id="togglePassword" style="position: absolute; right: 12px; top: 14px; cursor: pointer;" title="Show/Hide">👁️</span>
       </div>
       <div id="password-strength"></div>
+      <small id="password-error"></small>
 
       <button type="submit">Signup</button>
       <p>Already have an account? <a href="login.html">Login</a></p>
@@ -159,16 +167,29 @@
     const passwordInput = document.getElementById('password');
     const togglePassword = document.getElementById('togglePassword');
     const passwordStrength = document.getElementById('password-strength');
+    const passwordError = document.getElementById('password-error');
+    const form = document.getElementById('signup-form');
 
-    // Live email validation
-    emailInput.addEventListener('input', () => {
-      const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!regex.test(emailInput.value) && emailInput.value !== "") {
+    // Lowercase + live email validation (must be lowercase and valid format)
+    function validateEmail() {
+      // Enforce lowercase as user types
+      const cur = emailInput.value;
+      const lower = cur.toLowerCase();
+      if (cur !== lower) emailInput.value = lower;
+
+      // Strict lowercase email regex
+      const regex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
+      const ok = regex.test(emailInput.value.trim());
+
+      if (!ok && emailInput.value !== "") {
         emailError.textContent = "Enter valid email address";
       } else {
         emailError.textContent = "";
       }
-    });
+      return ok;
+    }
+    emailInput.addEventListener('input', validateEmail);
+    emailInput.addEventListener('blur', () => { emailInput.value = emailInput.value.trim(); validateEmail(); });
 
     // Toggle password visibility
     togglePassword.addEventListener('click', () => {
@@ -176,49 +197,81 @@
       passwordInput.setAttribute('type', type);
     });
 
-    // Password strength checker
-    passwordInput.addEventListener('input', () => {
-      const value = passwordInput.value;
-      let strength = "";
-      let color = "";
+    // Strong password rule
+    function isStrongPassword(pw) {
+      // ≥8 chars, at least one lowercase, one uppercase, one number, one special
+      return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()[\]{}~\-+=_.,:;|\\/])[A-Za-z\d@$!%*?&#^()[\]{}~\-+=_.,:;|\\/]{8,}$/.test(pw);
+    }
 
-      if (value.length < 6) {
-        strength = "Weak";
-        color = "red";
-      } else if (value.match(/[A-Z]/) && value.match(/[0-9]/) && value.match(/[@$!%*?&]/) && value.length >= 8) {
-        strength = "Strong";
+    // Strength meter
+    function updateStrengthMeter(value) {
+      let label = "Weak";
+      let color = "red";
+
+      const hasLower = /[a-z]/.test(value);
+      const hasUpper = /[A-Z]/.test(value);
+      const hasNumber = /\d/.test(value);
+      const hasSpecial = /[@$!%*?&#^()[\]{}~\-+=_.,:;|\\/]/.test(value);
+      const lengthOK = value.length >= 8;
+
+      if (isStrongPassword(value)) {
+        label = "Strong";
         color = "green";
-      } else {
-        strength = "Medium";
+      } else if (value.length >= 6 && [hasLower, hasUpper, hasNumber, hasSpecial].filter(Boolean).length >= 2) {
+        label = "Medium";
         color = "orange";
       }
-      passwordStrength.textContent = `Password Strength: ${strength}`;
+
+      passwordStrength.textContent = value ? `Password Strength: ${label}` : "";
       passwordStrength.style.color = color;
+    }
+
+    passwordInput.addEventListener('input', () => {
+      passwordError.textContent = ""; // clear submit error while typing
+      updateStrengthMeter(passwordInput.value);
     });
 
-    document.getElementById('signup-form').addEventListener('submit', async (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (emailError.textContent !== "") return;
 
-      const form = e.target;
+      // Block submission unless email is valid
+      const emailOK = validateEmail();
+      if (!emailOK) {
+        emailInput.focus();
+        return;
+      }
+
+      // Block submission unless password is STRONG
+      const pw = passwordInput.value;
+      if (!isStrongPassword(pw)) {
+        passwordError.textContent = "Use a strong password: 8+ chars with uppercase, lowercase, number, and special character.";
+        passwordStrength.textContent = "Password Strength: Weak";
+        passwordStrength.style.color = "red";
+        passwordInput.focus();
+        return;
+      } else {
+        passwordError.textContent = "";
+      }
+
       const res = await fetch('/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: form.name.value,
-          email: form.email.value,
-          phone: form.countryCode.value + form.phone.value,
-          password: form.password.value
+          name: form.name.value.trim(),
+          email: emailInput.value.trim(),
+          phone: form.countryCode.value + form.phone.value.trim(),
+          password: pw
         })
       });
 
-      const data = await res.json();
+      let data = {};
+      try { data = await res.json(); } catch (_) {}
 
       if (res.ok) {
         localStorage.setItem('token', data.token);
         window.location.href = 'details.html';
       } else {
-        alert(data.message);
+        alert(data && data.message ? data.message : 'Signup failed. Please try again.');
       }
     });
   </script>

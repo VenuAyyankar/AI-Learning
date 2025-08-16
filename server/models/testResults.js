@@ -1,7 +1,7 @@
 // server/routes/testResults.js
 const express = require('express');
 const router = express.Router();
-const TestResult = require('../models/testresults');
+const TestResult = require('./testresults');
 const authMiddleware = require('../middleware/auth');
 
 // Save test result

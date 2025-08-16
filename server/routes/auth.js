@@ -1,3 +1,4 @@
+// server/routes/auth.js
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
@@ -24,13 +25,7 @@ router.post('/signup', async (req, res) => {
     const exists = await User.findOne({ $or: [{ email }, { phone }] });
     if (exists) return res.status(400).json({ message: 'User already exists' });
 
-    const user = new User({ 
-      name, 
-      email, 
-      phone, 
-      password, 
-      progressStage: 'personal-details' // <-- set stage after signup
-    });
+    const user = new User({ name, email, phone, password });
     await user.save();
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
@@ -77,12 +72,10 @@ router.post('/submit-details', authMiddleware, upload.single('photo'), async (re
     user.address = req.body.address;
     user.city = req.body.city;
     user.state = req.body.state;
-
     if (req.body.skillLevel) user.skillLevel = req.body.skillLevel;
     if (req.file) {
       user.photo = '/uploads/' + req.file.filename;
     }
-
     user.detailsFilled = true;
     await user.save();
 
@@ -97,7 +90,7 @@ router.post('/submit-details', authMiddleware, upload.single('photo'), async (re
   }
 });
 
-// ----------------- Submit Exam -----------------
+// ----------------- Submit Exam (new route) -----------------
 router.post('/submit-exam', authMiddleware, async (req, res) => {
   try {
     const { testName, score, totalQuestions } = req.body;
@@ -108,19 +101,16 @@ router.post('/submit-exam', authMiddleware, async (req, res) => {
     const user = await User.findById(req.user.userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    if (!Array.isArray(user.scores)) {
-      user.scores = [];
-    }
-
+    user.scores = user.scores || [];
     user.scores.push({
       testName,
       score: Number(score),
       totalQuestions: Number(totalQuestions),
       date: new Date()
     });
-
     await user.save();
 
+    // Don't redirect — let frontend handle 1-minute review + "Take me to dashboard"
     res.json({ success: true, message: 'Exam submitted successfully. Review time started.' });
   } catch (err) {
     console.error(err);
@@ -132,25 +122,22 @@ router.post('/submit-exam', authMiddleware, async (req, res) => {
 router.post('/save-score', authMiddleware, async (req, res) => {
   try {
     const { testName, score, totalQuestions } = req.body;
-    if (!testName || typeof score === 'undefined' || typeof totalQuestions === 'undefined') {
-      return res.status(400).json({ message: 'Missing testName, score, or totalQuestions' });
+    if (typeof score === 'undefined' || typeof totalQuestions === 'undefined') {
+      return res.status(400).json({ message: 'Missing score or totalQuestions' });
     }
 
     const user = await User.findById(req.user.userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    if (!Array.isArray(user.scores)) {
-      user.scores = [];
-    }
-
+    user.scores = user.scores || [];
     user.scores.push({
       testName,
       score: Number(score),
       totalQuestions: Number(totalQuestions),
       date: new Date()
     });
-
     await user.save();
+
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -164,10 +151,7 @@ router.get('/test-history', authMiddleware, async (req, res) => {
     const user = await User.findById(req.user.userId).select('scores');
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Always return sorted by newest first
-    const sortedScores = (user.scores || []).sort((a, b) => new Date(b.date) - new Date(a.date));
-
-    res.json(sortedScores);
+    res.json(user.scores || []);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Failed to fetch test history' });

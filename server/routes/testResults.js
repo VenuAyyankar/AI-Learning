@@ -1,34 +1,43 @@
-// routes/testResults.js
+// server/routes/testResults.js
 const express = require('express');
 const router = express.Router();
-const TestResult = require('../models/TestResult');
-
+const TestResult = require('../models/testresults');
+const authMiddleware = require('../middleware/auth');
 
 // Save test result
-router.post('/', async (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
   try {
-    const { userId, testName, score, totalQuestions, correctAnswers } = req.body;
+    const { score, totalMarks, testName, answers } = req.body;
 
-    if (!userId || !testName || score == null || totalQuestions == null || correctAnswers == null) {
-      return res.status(400).json({ error: 'All fields are required' });
+    if (!score || !totalMarks || !testName) {
+      return res.status(400).json({ message: 'Missing required fields' });
     }
 
-    const newResult = new TestResult({ userId, testName, score, totalQuestions, correctAnswers });
-    await newResult.save();
+    const newResult = new TestResult({
+      userId: req.user.id,
+      score,
+      totalMarks,
+      testName,
+      answers: answers || [],
+      date: new Date()
+    });
 
-    res.status(201).json({ message: 'Test result saved successfully', result: newResult });
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    await newResult.save();
+    res.status(201).json({ message: 'Test result saved successfully' });
+  } catch (err) {
+    console.error('Error saving test result:', err);
+    res.status(500).json({ message: 'Failed to save test result' });
   }
 });
 
-// Get all results
-router.get('/', async (req, res) => {
+// Fetch all results for logged-in user
+router.get('/', authMiddleware, async (req, res) => {
   try {
-    const results = await TestResult.find();
+    const results = await TestResult.find({ userId: req.user.id }).sort({ date: -1 });
     res.json(results);
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+  } catch (err) {
+    console.error('Error fetching test results:', err);
+    res.status(500).json({ message: 'Failed to fetch test results' });
   }
 });
 

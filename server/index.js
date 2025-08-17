@@ -7,6 +7,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/user');   // ✅ Added this
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -50,6 +51,7 @@ app.get('/intermediate-test', (req, res) => {
 
 // ===== Backend API routes =====
 app.use('/', authRoutes);
+app.use('/api/user', userRoutes);   // ✅ Added this
 
 // ===== MongoDB connection =====
 mongoose.connect(process.env.MONGO_URI)

@@ -150,7 +150,25 @@
 
       if (res.ok) {
         localStorage.setItem('token', data.token);
-        window.location.href = data.detailsFilled ? 'dashboard.html' : 'details.html';
+
+        // ✅ Use backend lastPage directly
+        switch (data.lastPage) {
+          case "details":
+            window.location.href = "details.html";
+            break;
+          case "beginner-test":
+            window.location.href = "beginner-test.html";
+            break;
+          case "intermediate-test":
+            window.location.href = "intermediate-test.html";
+            break;
+          case "dashboard":
+            window.location.href = "dashboard.html";
+            break;
+          default:
+            window.location.href = "details.html"; // fallback
+        }
+
       } else {
         alert(data.message);
       }

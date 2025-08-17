@@ -1,16 +1,8 @@
-// server/models/user.js
 const mongoose = require('mongoose');
 
-const scoreSchema = new mongoose.Schema({
-  testName: { type: String, required: true },
-  score: { type: Number, required: true },
-  totalQuestions: { type: Number, required: true },
-  date: { type: Date, default: Date.now }
-});
-
 const userSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
+  name: String,
+  email: String,
   phone: String,
   password: String,
   dob: String,
@@ -20,8 +12,14 @@ const userSchema = new mongoose.Schema({
   state: String,
   photo: String,
   skillLevel: { type: String, enum: ['Beginner', 'Intermediate', 'Advanced'] },
-  detailsFilled: { type: Boolean, default: false },
-  scores: [scoreSchema]
+
+  // ✅ Progress tracking
+  progress: {
+    detailsCompleted: { type: Boolean, default: false },
+    testCompleted: { type: Boolean, default: false },
+    lastPage: { type: String, default: 'signup' } 
+    // signup | details | beginner-test | advanced-test | dashboard
+  }
 });
 
 module.exports = mongoose.model('User', userSchema);

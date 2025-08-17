@@ -12,7 +12,7 @@ router.post('/', authMiddleware, async (req, res) => {
     if (!score || !totalMarks || !testName) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
-
+/
     const newResult = new TestResult({
       userId: req.user.id,
       score,

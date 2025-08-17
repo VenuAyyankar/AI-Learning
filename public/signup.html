@@ -134,7 +134,7 @@
       <small id="email-error"></small>
 
       <!-- Country code dropdown + phone -->
-      <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+      <div style="display: flex; gap: 8px; margin-bottom: 0;">
         <select name="countryCode" required style="flex: 0.6;">
           <option value="+91" selected>🇮🇳 +91</option>
           <option value="+1">🇺🇸 +1</option>
@@ -145,8 +145,9 @@
           <option value="+49">🇩🇪 +49</option>
           <option value="+65">🇸🇬 +65</option>
         </select>
-        <input type="tel" name="phone" placeholder="Phone Number" required style="flex: 1;" inputmode="numeric">
+        <input type="tel" name="phone" id="phone" placeholder="Phone Number" required style="flex: 1;" inputmode="numeric">
       </div>
+      <small id="phone-error"></small>
 
       <!-- Password with eye toggle and strength meter -->
       <div style="position: relative;">
@@ -169,15 +170,15 @@
     const passwordStrength = document.getElementById('password-strength');
     const passwordError = document.getElementById('password-error');
     const form = document.getElementById('signup-form');
+    const phoneInput = document.getElementById('phone');
+    const phoneError = document.getElementById('phone-error');
 
-    // Lowercase + live email validation (must be lowercase and valid format)
+    // Lowercase + live email validation
     function validateEmail() {
-      // Enforce lowercase as user types
       const cur = emailInput.value;
       const lower = cur.toLowerCase();
       if (cur !== lower) emailInput.value = lower;
 
-      // Strict lowercase email regex
       const regex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
       const ok = regex.test(emailInput.value.trim());
 
@@ -199,7 +200,6 @@
 
     // Strong password rule
     function isStrongPassword(pw) {
-      // ≥8 chars, at least one lowercase, one uppercase, one number, one special
       return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()[\]{}~\-+=_.,:;|\\/])[A-Za-z\d@$!%*?&#^()[\]{}~\-+=_.,:;|\\/]{8,}$/.test(pw);
     }
 
@@ -212,7 +212,6 @@
       const hasUpper = /[A-Z]/.test(value);
       const hasNumber = /\d/.test(value);
       const hasSpecial = /[@$!%*?&#^()[\]{}~\-+=_.,:;|\\/]/.test(value);
-      const lengthOK = value.length >= 8;
 
       if (isStrongPassword(value)) {
         label = "Strong";
@@ -227,21 +226,41 @@
     }
 
     passwordInput.addEventListener('input', () => {
-      passwordError.textContent = ""; // clear submit error while typing
+      passwordError.textContent = "";
       updateStrengthMeter(passwordInput.value);
     });
 
+    // Allow only digits + max 10 digits
+    phoneInput.addEventListener('input', () => {
+      phoneInput.value = phoneInput.value.replace(/\D/g, '').slice(0, 10);
+    });
+
+    // Validate phone number
+    function validatePhone() {
+      const phone = phoneInput.value.trim();
+      if (phone.length !== 10) {
+        phoneError.textContent = "Invalid mobile number (must be 10 digits)";
+        return false;
+      }
+      phoneError.textContent = "";
+      return true;
+    }
+    phoneInput.addEventListener('blur', validatePhone);
+
+    // Form submit
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      // Block submission unless email is valid
-      const emailOK = validateEmail();
-      if (!emailOK) {
+      if (!validateEmail()) {
         emailInput.focus();
         return;
       }
 
-      // Block submission unless password is STRONG
+      if (!validatePhone()) {
+        phoneInput.focus();
+        return;
+      }
+
       const pw = passwordInput.value;
       if (!isStrongPassword(pw)) {
         passwordError.textContent = "Use a strong password: 8+ chars with uppercase, lowercase, number, and special character.";
@@ -249,8 +268,6 @@
         passwordStrength.style.color = "red";
         passwordInput.focus();
         return;
-      } else {
-        passwordError.textContent = "";
       }
 
       const res = await fetch('/signup', {
@@ -259,7 +276,7 @@
         body: JSON.stringify({
           name: form.name.value.trim(),
           email: emailInput.value.trim(),
-          phone: form.countryCode.value + form.phone.value.trim(),
+          phone: form.countryCode.value + phoneInput.value.trim(),
           password: pw
         })
       });
